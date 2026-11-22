@@ -1,23 +1,4 @@
 # Casauals.
-
-## License
-
-© 2026 casauals. All Rights Reserved.
-
-This software and associated documentation are the exclusive property of casauals.
-
-You may not use, copy, modify, publish, distribute, sublicense, or sell
-this software without explicit written permission from casauals.
-
-Title and ownership of this software, and all associated intellectual property rights,
-remain with casauals. Unauthorized reproduction, distribution, or modification is
-strictly prohibited and constitutes a violation of intellectual property rights.
-
-Use of this software does not convey any license under casauals's intellectual property
-rights, including any trademarks or service marks.
-
-All rights reserved.
-
 Node/Express + MongoDB Atlas. Frontend: `public/` (HTML, `css/`, `js/`, `assets/`). Backend: `server.js` + `src/`.
 
 ## Run
@@ -37,3 +18,6 @@ The e-mailed link uses the address the visitor used (or BASE_URL when it is a re
 ## Database
 `pending_registrations` (e-mail + one-time token, auto-deleted) and `club_members` (e-mail, name, phone, blocked, registeredAt).
 Never commit `.env` (it is in `.gitignore`).
+
+## Deploy on Vercel
+Add these Environment Variables in the Vercel project settings: `MONGODB_URI`, `DB_NAME`, `GMAIL_USER`, `GMAIL_APP_PASSWORD`, `ADMIN_PASSWORD`, `BASE_URL` (your https Vercel address). In Atlas > Network Access allow `0.0.0.0/0`. Then redeploy. Runtime errors appear in Vercel > project > Logs.

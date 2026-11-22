@@ -1,5 +1,5 @@
-const router=require('express').Router(),crypto=require('crypto'),{ObjectId}=require('mongodb'),cfg=require('../config'),{state}=require('../db'),{wrap,dbUp,auth,oid,tokens}=require('../middleware'),{base}=require('../link'),mailer=require('../mailer');
-router.post('/admin/login',(q,r)=>{if(cfg.ADMIN_PASSWORD&&q.body.password===cfg.ADMIN_PASSWORD){const t=crypto.randomBytes(24).toString('hex');tokens.add(t);return r.json({token:t})}r.sendStatus(401)});
+const router=require('express').Router(),crypto=require('crypto'),{ObjectId}=require('mongodb'),cfg=require('../config'),{state}=require('../db'),{wrap,dbUp,auth,oid}=require('../middleware'),{base}=require('../link'),mailer=require('../mailer'),token=require('../token');
+router.post('/admin/login',(q,r)=>{if(cfg.ADMIN_PASSWORD&&q.body.password===cfg.ADMIN_PASSWORD){return r.json({token:token.make()})}r.sendStatus(401)});
 router.use(dbUp);
 router.get('/members',auth,wrap(async(q,r)=>r.json(await state.members.find().sort({registeredAt:-1}).toArray())));
 router.patch('/members/:id',auth,oid,wrap(async(q,r)=>{await state.members.updateOne({_id:new ObjectId(q.params.id)},[{$set:{blocked:{$not:[{$ifNull:['$blocked',false]}]}}}]);r.sendStatus(204)}));
