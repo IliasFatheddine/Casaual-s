@@ -1,0 +1,12 @@
+const path=require('path'),cfg=require('./src/config'),express=require('express'),db=require('./src/db'),mailer=require('./src/mailer');
+const app=express();
+app.set('trust proxy',1);
+app.use(express.json({limit:'10kb'}));
+app.get('/api/health',(q,r)=>r.json({db:db.state.ready}));
+app.use(express.static(path.join(__dirname,'public')));
+app.use('/api',require('./src/routes/admin'));
+app.use('/api',require('./src/routes/public'));
+app.use('/api',(q,r)=>r.status(404).json({msg:'NOT FOUND.',err:'NOT FOUND.'}));
+app.use((e,q,r,n)=>{console.error('[server]',e.message);r.status(400).json({msg:'BAD REQUEST.',err:'BAD REQUEST.'})});
+db.connect().then(()=>{app.listen(cfg.PORT,()=>{console.log('Casauals. running on http://localhost:'+cfg.PORT);mailer.verify()})}).catch(()=>process.exit(1));
+process.on('SIGINT',async()=>{await db.close();process.exit(0)});

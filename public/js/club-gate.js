@@ -1,0 +1,63 @@
+(()=>{
+const $=s=>document.querySelector(s),LS='csl_',K=s=>s.toLowerCase().replace(/[^a-z0-9]/g,'_'),PH='50e5aad7da96b64db04fd3f6c2676bac7932b0c2b23de9169bf8763b76fea6e2';
+const h=(t,c,x,p)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;if(p)p.appendChild(e);return e};
+let db=null;const ready=(async()=>{try{db=window.claude?await claude.use('db'):null}catch(_){}})();
+const lg=c=>{try{return JSON.parse(localStorage.getItem(LS+c)||'{}')}catch(_){return{}}};
+const ls=(c,k,v)=>{try{const o=lg(c);o[k]=v;localStorage.setItem(LS+c,JSON.stringify(o))}catch(_){}};
+const dbe=e=>{const m=(e&&(e.code||e.message))||'error',n=document.getElementById('dberr');window.__dbErr='Shared database error: '+m;if(n)n.textContent=window.__dbErr};
+async function all(c){await ready;const o=lg(c);if(db)try{(await db.collection(c).get()).docs.forEach(d=>{const x=d.data();if(!o[d.id]||(x.upd||0)>=(o[d.id].upd||0))o[d.id]=x})}catch(e){dbe(e)}Object.keys(MEM).forEach(z=>{const[cc,kk]=z.split('/');if(cc===c&&(MEM[z].upd||0)>=((o[kk]||{}).upd||0)){if(MEM[z].del)delete o[kk];else o[kk]=MEM[z]}});return o}
+const MEM={};async function del(c,k){try{const o=lg(c);delete o[k];localStorage.setItem(LS+c,JSON.stringify(o))}catch(_){}MEM[c+'/'+k]={del:1,upd:Date.now()};if(db)try{await db.collection(c).doc(k).delete()}catch(e){dbe(e)}}
+async function put(c,k,v){v.upd=Date.now();ls(c,k,v);MEM[c+'/'+k]=v;if(db)try{await db.collection(c).doc(k).set(v);const s=await db.collection(c).doc(k).get(),d=s.data&&s.data();if(!d||d.status!==v.status)dbe({message:'write was not saved'})}catch(e){dbe(e)}}
+const gi=$('#gm'),gs=$('#gs'),isOk=r=>r&&r.status==='approved'&&!r.blocked;
+gi.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();$('#gb').click()}};
+const BAD=new Set(('mailinator.com guerrillamail.com guerrillamail.net guerrillamail.org guerrillamail.biz guerrillamail.de guerrillamailblock.com grr.la sharklasers.com pokemail.net spam4.me 10minutemail.com 10minutemail.net 20minutemail.com tempmail.com temp-mail.org temp-mail.io tempmail.net tempmailo.com tempr.email tmpmail.org tmpmail.net yopmail.com yopmail.fr yopmail.net trashmail.com trashmail.net trashmail.de getnada.com nada.email maildrop.cc dispostable.com fakeinbox.com mailnesia.com mintemail.com moakt.com tempail.com emailondeck.com mohmal.com burnermail.io spamgourmet.com getairmail.com mytemp.email discard.email throwawaymail.com throwam.com fakemail.net fakemailgenerator.com mailcatch.com mailforspam.com mailnull.com mytrashmail.com spambox.us spamex.com tempinbox.com inboxkitten.com mail.tm emailfake.com crazymailing.com dropmail.me harakirimail.com jetable.org luxusmail.org minuteinbox.com mailsac.com tempmailaddress.com anonbox.net').split(' '));
+const TYPO={'gmial.com':'gmail.com','gmal.com':'gmail.com','gmil.com':'gmail.com','gamil.com':'gmail.com','gnail.com':'gmail.com','gmail.con':'gmail.com','gmail.co':'gmail.com','gmail.cm':'gmail.com','gmaill.com':'gmail.com','gmail.om':'gmail.com','gmai.com':'gmail.com','hotmial.com':'hotmail.com','hotmal.com':'hotmail.com','hotmail.con':'hotmail.com','hotmai.com':'hotmail.com','homail.com':'hotmail.com','yaho.com':'yahoo.com','yahooo.com':'yahoo.com','yahoo.con':'yahoo.com','yaoo.com':'yahoo.com','outlok.com':'outlook.com','outloook.com':'outlook.com','outlook.con':'outlook.com','iclod.com':'icloud.com','icloud.con':'icloud.com','icoud.com':'icloud.com'};
+const FAKE_DOM=/(^|\.)example\.(com|org|net)$|^(test\.(com|org|net)|domain\.com|localhost)$|\.(test|invalid|localhost|example)$/,FAKE_LOC=/^(?:test|tester|testing|fake|fakemail|asdf|asdfg|asdfgh|qwerty|qwertyuiop|abcd|abcde|xxx|none|noemail|nomail|null|example|sample)\d*$|^(.)\1{3,}$/;
+async function dnsq(d,t){const c=new AbortController(),to=setTimeout(()=>c.abort(),3500);try{const r=await fetch('https://dns.google/resolve?name='+encodeURIComponent(d)+'&type='+t,{signal:c.signal});return r.ok?await r.json():null}catch(_){return null}finally{clearTimeout(to)}}
+/* false only when DNS clearly says the domain cannot receive mail; any error, timeout or blocked request lets it through */
+async function domainReal(d){const m=await dnsq(d,'MX');if(!m)return true;if(m.Status===3)return false;if(m.Status!==0)return true;
+ const mx=(m.Answer||[]).filter(a=>a.type===15);if(mx.length)return mx.some(a=>!/^\d+\s+\.?$/.test(a.data||''));
+ const a=await dnsq(d,'A');if(!a)return true;if((a.Answer||[]).some(x=>x.type===1))return true;
+ const q=await dnsq(d,'AAAA');if(!q)return true;return(q.Answer||[]).some(x=>x.type===28)}
+async function mailCheck(em){const e=em.toLowerCase(),p=e.split('@'),lo=p[0],dm=p[1]||'';
+ if(p.length!==2||e.length>254||!/^[a-z0-9._%+-]{1,64}$/.test(lo)||/^\.|\.$|\.\./.test(lo)||!/^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,24}$/.test(dm))return'ENTER A VALID E-MAIL.';
+ if(BAD.has(dm)||BAD.has(dm.split('.').slice(-2).join('.')))return'TEMPORARY E-MAILS ARE NOT ACCEPTED. USE YOUR REAL E-MAIL.';
+ if(TYPO[dm])return'DID YOU MEAN '+lo+'@'+TYPO[dm]+'? FIX IT AND SEND AGAIN.';
+ if(FAKE_DOM.test(dm)||FAKE_LOC.test(lo))return'THIS E-MAIL LOOKS FAKE. USE YOUR REAL E-MAIL.';
+ if(!await domainReal(dm))return'THIS E-MAIL DOMAIN DOES NOT EXIST. CHECK THE SPELLING.';
+ return''}
+let gt;
+$('#gb').onclick=async()=>{clearTimeout(gt);const em=gi.value.trim();if(!/^\S+@\S+\.\S+$/.test(em)){gs.textContent='ENTER A VALID E-MAIL.';return}
+ const gb=$('#gb');gb.disabled=true;gs.textContent='SENDING...';
+ try{const r=await(await fetch('/api/request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em})})).json();
+  if(r.status==='member'){ls('me','e',em);document.body.classList.add('wl');gs.textContent='';return}
+  gs.textContent=r.msg||'ERROR.';if(r.status==='pending')gi.value=''}catch(_){gs.textContent='SERVER NOT REACHABLE.'}finally{gb.disabled=false}};
+const me=lg('me').e;if(me)fetch('/api/check?email='+encodeURIComponent(me)).then(r=>r.json()).then(j=>{if(j.ok)document.body.classList.add('wl')}).catch(()=>{});
+function modal(f){const m=h('div','cov',null,document.body),b=h('div','cbox',null,m),x=()=>m.remove();m.onclick=e=>{if(e.target===m)x()};f(b,x)}
+const lo=$('a.logo'),am=h('div','amenu',null,document.body);am.hidden=true;
+const ab=h('a','nb ul',null,am);ab.href='#admin';h('span','t','Admin',ab);
+lo.addEventListener('contextmenu',e=>{e.preventDefault();const r=lo.getBoundingClientRect();am.style.left=r.left+'px';am.style.top=r.bottom+14+'px';am.hidden=false});
+document.addEventListener('click',e=>{if(!e.target.closest('.amenu'))am.hidden=true});
+ab.onclick=e=>{e.preventDefault();am.hidden=true;if(window.__adm&&window.__adm.on()){dash();return}modal((b,x)=>{h('h2',0,'Admin',b);const pw=h('input','fi',null,b);pw.type='password';pw.placeholder='password';const er=h('div','gs',null,b),go=h('button','buy','ENTER',b);go.type='button';
+ const ok=async()=>{const d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pw.value)),hx=[...new Uint8Array(d)].map(v=>v.toString(16).padStart(2,'0')).join('');if(hx===PH){try{const j=await(await fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw.value})})).json();window.__tok=j.token||''}catch(_){window.__tok=''}x();window.__adm.login()}else er.textContent='WRONG PASSWORD.'};
+ go.onclick=ok;pw.onkeydown=e=>{if(e.key==='Enter')ok()};setTimeout(()=>pw.focus())})};
+const row=(p,t,s,acts)=>{const r=h('div','drow',null,p),i=h('div',null,null,r);h('b',null,t,i);h('span',null,s,i);const a=h('div','dact',null,r);acts.forEach(([n,f,c,t])=>{const b=h('button','buy'+(c?' '+c:''),n,a);b.type='button';b.onclick=f;if(t){b.title=t;b.setAttribute('aria-label',t)}})};
+function dash(){const d=h('div','dash',null,document.body),bar=h('div','dtabs',null,d),body=h('div',null,null,d);let tab='orders';
+ const sec=(t,L,fn)=>{h('h3','dsh',t,body);if(!L.length)h('p',null,'NOTHING YET.',body);L.sort((a,b)=>b[1].ts-a[1].ts).forEach(([k,v])=>fn(k,v))};
+ const set=(c,k,v,st)=>()=>{v.status=st;put(c,k,v).then(draw)};
+ async function draw(){body.textContent='';bar.textContent='';const lgo=h('img','dlogo',null,bar);lgo.src=$('a.logo img').src;lgo.alt='Casauals.';
+  [['orders','Orders confirmation','co'],['wlist','Collection','cc'],['wlist','Whitelist','cs cw'],['club','Club members','cs'],['sup','Support tickets','ct']].forEach(([k,n,c])=>{const on=c==='cc'?(tab==='wlist'||tab==='club'):k===tab,a=h('a','dbn '+c+(on?' on':''),n,bar);a.onclick=()=>{tab=k;draw()}});
+  const cl=h('a','dbn cx','[ Close ]',bar);cl.onclick=()=>d.remove();const dc=h('a','dbn cx','[ Disconnect ]',bar);dc.style.right='150px';dc.style.color='#e5484d';dc.onclick=()=>{d.remove();window.__adm.logout()};const hnb=h('a','dbn co','Hero notice',bar);hnb.onclick=()=>{d.remove();window.__adm.notice()};const ep=h('a','dbn co','Edit products',bar);ep.onclick=()=>{d.remove();window.__adm.goShop()};const sc=window.__adm.store(),sb=h('a','dbn co',sc?'Store: CLOSED – click to open':'Store: OPEN – click to close',bar);if(sc){sb.style.color='#e5484d';sb.style.borderLeftColor='#e5484d'}sb.onclick=()=>{window.__adm.toggleStore();draw()};h('div',null,'v14 \u00B7 '+(db?'shared db':'this device only'),bar).style.cssText='margin-top:18px;font-size:11px;opacity:.5';
+  h('p',null,window.__dbErr||'',body).id='dberr';const E=async c=>Object.entries(await all(c));
+  if(tab==='orders')sec('Orders',await E('orders'),(k,v)=>row(body,v.id+' \u00B7 '+v.status,v.name+' \u00B7 '+v.phone+'\n'+v.items,v.status==='confirmed'?[]:[['Confirm',set('orders',k,v,'confirmed')]]));
+  if(tab==='club'){h('h3','dsh','Club members',body);const A={Authorization:'Bearer '+(window.__tok||'')},api=(m,id)=>fetch('/api/members/'+id,{method:m,headers:A});try{const r=await fetch('/api/members',{headers:A});if(r.status===401){h('p',null,'LOG OUT AND LOG IN AGAIN TO LOAD MEMBERS.',body);return}const L=await r.json();if(!L.length)h('p',null,'NOTHING YET.',body);L.forEach(m=>row(body,(m.name||'')+' \u00B7 '+m.email,'Number: '+m.phone+'\nRegistered: '+new Date(m.registeredAt).toLocaleString()+'\nCollections: '+(m.blocked?'BLOCKED':'allowed'),[['',async()=>{await api('PATCH',m._id);draw()},'dot'+(m.blocked?' off':''),m.blocked?'Blocked \u2013 click to allow':'Allowed \u2013 click to block'],['Email',()=>{location.href='mailto:'+m.email}],['Remove',async()=>{await api('DELETE',m._id);draw()}]]))}catch(_){h('p',null,'SERVER NOT REACHABLE.',body)}return}
+  if(tab==='wlist'){h('h3','dsh','Whitelist',body);const A={Authorization:'Bearer '+(window.__tok||'')},api=(m,p)=>fetch('/api/pending/'+p,{method:m,headers:A});try{const r=await fetch('/api/pending',{headers:A});if(r.status===401){h('p',null,'LOG OUT AND LOG IN AGAIN TO LOAD THE WHITELIST.',body);return}const L=await r.json();if(!L.length)h('p',null,'NOTHING YET.',body);L.forEach(m=>row(body,m.email,'Requested: '+new Date(m.requestedAt).toLocaleString()+'\nLink expires: '+new Date(m.tokenExp).toLocaleString()+(m.tokenExp<Date.now()?' (EXPIRED)':''),[['Resend link',async()=>{const x=await(await api('POST',m._id+'/resend')).json();alert(x.ok?'LINK SENT.':'COULD NOT SEND THE E-MAIL.');draw()}],['Remove',async()=>{await api('DELETE',m._id);draw()}]]))}catch(_){h('p',null,'SERVER NOT REACHABLE.',body)}return}
+  if(tab==='sup')sec('Open tickets',(await E('tickets')).filter(x=>x[1].status==='open'),(k,v)=>row(body,v.id+' \u00B7 '+v.email,v.msg,[['Close',set('tickets',k,v,'closed')]]))}
+ draw()}
+$('#spb').onclick=e=>{e.preventDefault();modal((b,x)=>{h('h2',0,'Support',b);const em=h('input','fi',null,b);em.type='email';em.placeholder='your@email.com';const ms=h('textarea','fi',null,b);ms.placeholder='how can we help?';const er=h('div','gs',null,b),go=h('button','buy','SEND',b);go.type='button';
+ go.onclick=async()=>{if(!/^\S+@\S+\.\S+$/.test(em.value.trim())||!ms.value.trim()){er.textContent='E-MAIL AND MESSAGE PLEASE.';return}
+  const id='TK-'+Math.random().toString(36).slice(2,7).toUpperCase();await put('tickets',id,{id,email:em.value.trim(),msg:ms.value.trim(),status:'open',ts:Date.now()});er.textContent='SENT. '+id}})};
+let pend=null;document.addEventListener('submit',e=>{if(e.target.querySelector&&e.target.querySelector('#fName'))pend={name:$('#fName').value.trim(),phone:$('#fPhone').value.trim(),email:lg('me').e||'',items:($('#cBody')||{}).textContent||''}},true);
+new MutationObserver(()=>{const o=$('.oid');if(o&&pend&&o.textContent&&o.dataset.s!=='1'){o.dataset.s='1';put('orders',K(o.textContent),{id:o.textContent,...pend,status:'pending',ts:Date.now()});pend=null}}).observe(document.body,{childList:true,subtree:true,characterData:true});
+window.__csl={put,all,del,K,lg,dash,PH,isOk};
+})();

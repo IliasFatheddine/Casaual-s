@@ -1,0 +1,21 @@
+a.logo{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.atb,.addbar{display:none}
+body.adm .atb{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;width:100%;margin-bottom:6px;position:relative;z-index:4}
+body.adm .addbar{display:flex;gap:10px;margin:0 0 26px;flex-wrap:wrap}
+body.adm .pcard{outline:1px dashed rgba(242,194,48,.5);outline-offset:6px}
+.ab{font:inherit;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:#f2c230;background:#000;border:1px solid #f2c230;padding:6px 9px 5px;cursor:pointer}
+.ab:hover,.ab.on{background:#f2c230;color:#000}
+body.adm .pcard,body.adm .pcard .pimg{cursor:grab;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.pcard.dragging{opacity:.35}
+.pcard.gone{display:none!important}
+.so{display:none;color:#ff6b6b;border:1px solid #ff6b6b;padding:4px 10px 3px;font-size:13px;letter-spacing:.08em}
+.pcard.oos .so{display:block}.pcard.oos .buy{display:none}.pcard.oos .pimgs{opacity:.4}
+.admbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 46px);z-index:64;display:flex;gap:8px;align-items:center;background:#000;border:1px solid #f2c230;padding:6px 8px;font-size:12px;color:#f2c230;letter-spacing:.06em;white-space:nowrap}
+.admbar[hidden]{display:none}
+.admbar{background:#fff;border-color:#000;color:#000}
+.admbar .ab{background:#fff;color:#000;border-color:#000}
+.admbar .ab:hover,.admbar .ab.on{background:#000;color:#fff}
+.hnote{position:absolute;left:50%;transform:translateX(-50%);top:92px;z-index:3;max-width:min(760px,calc(100vw - 32px));width:max-content;display:flex;gap:10px;align-items:center;background:#000;border:1px solid #f2c230;color:#f2c230;padding:9px 14px 8px;font-size:15px;letter-spacing:.05em;line-height:1.3;box-sizing:border-box}
+body.closed:not(.adm) .pcard .so{display:block}body.closed:not(.adm) .pcard .buy,body.closed:not(.adm) .zbuy{display:none}body.closed:not(.adm) .pcard .pimgs{opacity:.4}
+.hnote[hidden]{display:none}.hnote .e{font-size:20px}.hnote .x{white-space:pre-line}
+@media(max-width:760px){.hnote{top:150px;font-size:13px}}

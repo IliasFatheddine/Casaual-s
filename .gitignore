@@ -1,0 +1,19 @@
+# Protect sensitive environment files
+.env
+.env.*
+!.env.example
+
+# Node modules
+node_modules/
+
+# Dependency lockfile (can be regenerated)
+package-lock.json
+
+# Runtime artifacts
+.DS_Store
+/uploads/
+*.log
+
+# Environment specific
+/.env.production
+/.env.development
