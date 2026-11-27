@@ -36,7 +36,7 @@ function apply(){
       setMask(el,mk.toDataURL());masked=el;
     }
   }
-  if(f<=0.0005&&i!==window.__L){window.__L=i;window.__arrive=performance.now()}
+  if(f<=0.0005&&i!==window.__L){if(window.__L!==undefined)setUrl(i,false);window.__L=i;window.__arrive=performance.now()}
   lastI=i;lastF=f;
 }
 function draw(now){
@@ -84,8 +84,20 @@ addEventListener('keydown',e=>{if(lock())return;
   if(['ArrowDown','PageDown',' '].includes(e.key)){e.preventDefault();jump(Math.round(pos)+1)}
   if(['ArrowUp','PageUp'].includes(e.key)){e.preventDefault();jump(Math.round(pos)-1)}});
 const map={'#shop':1,'#collections':2,'#technology':3,'#about':4};
+/* URL <-> section. map is the single source of truth; Home has no hash. */
+const hashOf=i=>Object.keys(map).find(k=>map[k]===i)||'';
+const hashIdx=()=>{const h=location.hash.toLowerCase();return h in map?map[h]:h===''?0:null};   /* null: a hash that is not a section (#support ...) */
+function setUrl(i,push){try{const h=hashOf(i);if(location.hash.toLowerCase()===h)return;history[push?'pushState':'replaceState'](null,'',h||location.pathname+location.search)}catch(_){}}
 document.querySelectorAll('a.nb,a.logo').forEach(a=>{
   const h=a.getAttribute('href'),logo=a.classList.contains('logo');
-  if(logo||h in map)a.addEventListener('click',e=>{e.preventDefault();try{closePanel();if(h!=='#technology')closeSub()}catch(_){};snap(logo?0:map[h])});
+  if(logo||h in map)a.addEventListener('click',e=>{e.preventDefault();try{closePanel();if(h!=='#technology')closeSub()}catch(_){};const n=logo?0:map[h];setUrl(n,true);snap(n)});
 });
+/* Back/Forward, edited URLs and plain #links: play the section transition to the requested section */
+function fromUrl(){const i=hashIdx();if(i===null||i===(target===null?pos:target))return;
+  try{closePanel();closeSub()}catch(_){}
+  const z=document.getElementById('zoom'),zx=document.getElementById('zx');if(z&&zx&&z.classList.contains('open'))zx.click();
+  jump(i)}
+addEventListener('hashchange',fromUrl);addEventListener('popstate',fromUrl);
+/* direct link (/#collections ...): start on that section instead of Home */
+{const i=hashIdx();if(i>0){snap(i);apply();lastPos=pos}const dl=document.getElementById('dl');if(dl)dl.remove()}   /* drop the early <head> style now that the engine shows the same section */
 })();

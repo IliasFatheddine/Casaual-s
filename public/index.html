@@ -5,7 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Casauals.</title>
 <script src="js/keyboard-guard.js"></script>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caprasimo&family=Anton&family=Pixelify+Sans:wght@500;700&family=Inter:wght@400;600&display=swap">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script>
+/* Google Fonts is loaded without blocking first paint. Text paints immediately in the fallback face
+   (font-display:swap, as before) and swaps when the font arrives. window.__fonts resolves when the
+   stylesheet has loaded (or failed / timed out) so the hero canvas can still wait for the real face. */
+(function(){var l=document.createElement('link');l.rel='stylesheet';
+l.href='https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Inter:wght@400;600&display=swap';
+window.__fonts=new Promise(function(r){l.onload=l.onerror=r;setTimeout(r,3000)});
+document.head.appendChild(l)})();
+</script>
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Inter:wght@400;600&display=swap"></noscript>
+<script>
+/* Deep link (/#collections ...): show the requested section from the very first frame instead of flashing Home until
+   js/sections.js has loaded. Section order must match "map" in js/sections.js, which removes #dl once it has taken over. */
+(function(){var i={'#shop':1,'#collections':2,'#technology':3,'#about':4}[location.hash.toLowerCase()];
+if(i){var s=document.createElement('style');s.id='dl';s.textContent='#s0{display:none}#s'+i+'{display:block}';document.head.appendChild(s)}})();
+</script>
 
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/about.css">
@@ -15,7 +32,7 @@
 </head>
 <body>
 <header class="top">
-  <a class="logo" href="#" aria-label="Casauals. home"><img alt="Casauals." src="assets/images/casauals.png"></a>
+  <a class="logo" href="#" aria-label="Casauals. home"><picture><source type="image/webp" srcset="assets/images/casauals.webp"><img alt="Casauals." src="assets/images/casauals.png" width="500" height="84"></picture></a>
   <nav class="menu">
     <a class="nb" href="#shop"><span class="t" data-t="Shop">Shop</span></a>
     <a class="nb" href="#collections"><span class="t" data-t="Collections">Collections</span><i class="caret">&#9662;</i></a>

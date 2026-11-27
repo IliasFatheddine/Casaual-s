@@ -67,4 +67,7 @@ addEventListener('pointermove',e=>{
 });
 addEventListener('pointerleave',()=>{mouse.x=mouse.y=-999});
 addEventListener('resize',()=>img.complete&&build());
-img.onload=()=>{(document.fonts?document.fonts.ready:Promise.resolve()).then(()=>{build();requestAnimationFrame(frame)})};
+/* the Google Fonts stylesheet no longer blocks render, so wait for it (window.__fonts) and then the real glyph face
+   before the first canvas frame - same visual start as before, just not holding up the page's first paint */
+const fontsReady=()=>(window.__fonts||Promise.resolve()).then(()=>document.fonts?document.fonts.load('500 14px "Pixelify Sans"').catch(()=>{}).then(()=>document.fonts.ready):0);
+img.onload=()=>{fontsReady().then(()=>{build();requestAnimationFrame(frame)})};
